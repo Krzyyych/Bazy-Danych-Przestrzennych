@@ -6,8 +6,8 @@ shp2pgsql.exe "C:\BDP\T2018_KAR_GERMANY\T2019_KAR_BUILDINGS.shp" buildings_2019 
 shp2pgsql.exe "C:\BDP\T2018_KAR_GERMANY\T2018_KAR_BUILDINGS.shp" buildings_2018 | psql -p 5432 -h localhost -U postgres -d cw3
 SELECT *
 FROM buildings_2019 AS b2019
-LEFT JOIN buildings_2018 AS b2018 ON b2019.polygon_id = b2018.polygon_id
-WHERE b2019.height <> b2018.height OR b2019.type <> b2018.type
+LEFT JOIN buildings_2018 AS b2018 ON b2018.geom = b2019.geom
+WHERE b2018.gid IS NULL
 
 2. shp2pgsql.exe "C:\BDP\T2018_KAR_GERMANY\T2018_KAR_POI_TABLE.shp" kar_poi_table_2018 | psql -p 5432 -h localhost -U postgres -d cw3
 shp2pgsql.exe "C:\BDP\T2019_KAR_GERMANY\T2019_KAR_POI_TABLE.shp" kar_poi_table_2019 | psql -p 5432 -h localhost -U postgres -d cw3
@@ -15,8 +15,8 @@ shp2pgsql.exe "C:\BDP\T2019_KAR_GERMANY\T2019_KAR_POI_TABLE.shp" kar_poi_table_2
 CREATE VIEW changed_buildings AS
 SELECT b2019.*
 FROM buildings_2019 AS b2019
-LEFT JOIN buildings_2018 AS b2018 ON b2019.polygon_id = b2018.polygon_id
-WHERE b2019.height <> b2018.height OR b2019.type <> b2018.type;
+LEFT JOIN buildings_2018 AS b2018 ON b2018.geom = b2019.geom
+WHERE b2018.gid IS NULL;
 
 SELECT poi_2019.type, COUNT(poi_2019.gid) as liczba
 FROM kar_poi_table_2019 AS poi_2019
@@ -38,18 +38,18 @@ SELECT
 	fr_speed_l,
 	to_speed_l,
 	dir_travel,
-    ST_Transform(geom, 'EPSG:31468') AS geom
+    ST_Transform(geom, 'EPSG:3068') AS geom
 FROM streets_2019;
 
 4 i 5. CREATE TABLE input_points (
     gid SERIAL PRIMARY KEY,
-    geom GEOMETRY(Point, 31468)
+    geom GEOMETRY(Point, 3068)
 );
 
 INSERT INTO input_points (geom)
 VALUES 
-    (ST_SetSRID(ST_MakePoint(8.36093, 49.03174), 31468)),
-    (ST_SetSRID(ST_MakePoint(8.39876, 49.00644), 31468));
+    (ST_SetSRID(ST_MakePoint(8.36093, 49.03174), 3068)),
+    (ST_SetSRID(ST_MakePoint(8.39876, 49.00644), 3068));
 
 SELECT * FROM input_points
 
@@ -66,17 +66,17 @@ SELECT
 	'intersect',
 	lat,
 	lon,
-    ST_Transform(geom, 31468) AS geom
+    ST_Transform(geom, 3068) AS geom
 FROM streets_node_2019;
 
-CREATE TABLE input_points_line AS
-SELECT ST_MakeLine(geom ORDER BY gid) AS geom
-FROM input_points;
+CREATE VIEW line_points AS
+SELECT st_makeline(geom) AS geom
+FROM input_points;  
+SELECT * FROM line_points;
 
-SELECT
-    snr.gid AS street_node
-FROM input_points_line AS ipl
-JOIN streets_node_2019_reprojected AS snr ON ST_Intersects(ipl.geom, ST_Buffer(snr.geom, 0.002));
+SELECT DISTINCT node_id
+FROM line_points AS l, streets_node_2019_reprojected AS n
+WHERE st_contains(st_buffer(l.geom, 0.002), n.geom)
 
 7. shp2pgsql.exe "C:\BDP\T2018_KAR_GERMANY\T2018_KAR_LAND_USE_A.shp" land_use_2018 | psql -p 5432 -h localhost -U postgres -d cw3
 shp2pgsql.exe "C:\BDP\T2019_KAR_GERMANY\T2019_KAR_LAND_USE_A.shp" land_use_2019 | psql -p 5432 -h localhost -U postgres -d cw3
