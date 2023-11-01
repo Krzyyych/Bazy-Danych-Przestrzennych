@@ -1,0 +1,16 @@
+CREATE DATABASE cw4;
+CREATE EXTENSION postgis;
+
+1. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\trees.shp" trees | psql -p 5432 -h localhost -U postgres -d cw4
+
+3. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\railroads.shp" railroads | psql -p 5432 -h localhost -U postgres -d cw4
+shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\regions.shp" regions | psql -p 5432 -h localhost -U postgres -d cw4
+
+4. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\airports.shp" airports | psql -p 5432 -h localhost -U postgres -d cw4
+5. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\popp.shp" popp | psql -p 5432 -h localhost -U postgres -d cw4
+
+6. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\rivers.shp" rivers | psql -p 5432 -h localhost -U postgres -d cw4
+
+7. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\majrivers.shp" majrivers | psql -p 5432 -h localhost -U postgres -d cw4
+
+10. shp2pgsql.exe "C:\BDP\qgis_sample_data\shapefiles\swamp.shp" swamp | psql -p 5432 -h localhost -U postgres -d cw4
